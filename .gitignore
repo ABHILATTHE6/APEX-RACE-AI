@@ -1,0 +1,16 @@
+# FastF1 cache
+data/raw/fastf1_cache/
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Environment files
+.env
+
+# Local IDE files
+.vscode/
+.idea/
