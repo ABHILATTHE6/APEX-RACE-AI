@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 80">
+  <defs>
+    <linearGradient id="g" x1="0" x2="1">
+      <stop offset="0" stop-color="#ff4545"/>
+      <stop offset="1" stop-color="#ff8a5b"/>
+    </linearGradient>
+  </defs>
+  <rect width="220" height="80" rx="18" fill="#0b0c10"/>
+  <path d="M28 54 49 24h16L44 54H28Zm22-20 10-10h27l-12 18H58l8-12H50Z" fill="url(#g)"/>
+  <text x="94" y="48" fill="#f4f4f5" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="700">APEX-RACE</text>
+  <circle cx="194" cy="36" r="4" fill="#ff4545"/>
+</svg>
