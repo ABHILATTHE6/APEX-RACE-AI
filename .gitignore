@@ -1,6 +1,10 @@
 # FastF1 cache
 data/raw/fastf1_cache/
 
+# Generated local telemetry
+data/raw/**/*.csv
+data/raw/**/*.parquet
+
 # Python cache
 __pycache__/
 *.py[cod]
@@ -10,7 +14,11 @@ __pycache__/
 
 # Environment files
 .env
+.streamlit/secrets.toml
 
 # Local IDE files
 .vscode/
 .idea/
+
+# Streamlit local state
+.streamlit/cache/
