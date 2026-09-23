@@ -1,0 +1,47 @@
+name: APEX-RACE-AI CI
+
+on:
+  push:
+    branches: ["main", "feature/**"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  syntax:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+      - name: Compile Python modules
+        run: python -m compileall dashboard ingestion processing
+
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+      - name: Run analytics smoke test
+        run: |
+          python - <<'PY'
+          import pandas as pd
+          from processing.telemetry_metrics import telemetry_summary
+          from processing.validation.telemetry_validator import validate_telemetry
+
+          df = pd.DataFrame({
+              "Distance": [0, 100, 200],
+              "Speed": [100, 200, 180],
+              "Throttle": [50, 100, 30],
+              "Brake": [0, 0, 40],
+              "RPM": [7000, 11000, 9000],
+              "Gear": [3, 6, 4],
+              "DRS": [0, 1, 0],
+          })
+
+          assert telemetry_summary(df)["max_speed"] == 200
+          assert validate_telemetry(df)["valid"] is True
+          print("APEX-RACE-AI smoke test passed.")
+          PY
