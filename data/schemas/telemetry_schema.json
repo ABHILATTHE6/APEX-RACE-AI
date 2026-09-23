@@ -2,68 +2,18 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "APEX-RACE-AI Normalized Telemetry",
   "type": "object",
-  "required": [
-    "Distance",
-    "Speed",
-    "Throttle",
-    "Brake",
-    "RPM",
-    "Gear",
-    "DRS"
-  ],
+  "required": ["Distance", "Speed", "Throttle", "Brake", "RPM", "Gear", "DRS"],
   "properties": {
-    "Distance": {
-      "type": "number",
-      "minimum": 0,
-      "description": "Distance along lap in metres."
-    },
-    "Speed": {
-      "type": "number",
-      "minimum": 0,
-      "maximum": 450,
-      "description": "Vehicle speed in km/h."
-    },
-    "Throttle": {
-      "type": "number",
-      "minimum": 0,
-      "maximum": 100,
-      "description": "Throttle pedal position in percent."
-    },
-    "Brake": {
-      "type": "number",
-      "minimum": 0,
-      "maximum": 100,
-      "description": "Brake pedal position in percent."
-    },
-    "RPM": {
-      "type": "number",
-      "minimum": 0,
-      "maximum": 20000,
-      "description": "Engine speed in revolutions per minute."
-    },
-    "Gear": {
-      "type": "integer",
-      "minimum": 1,
-      "maximum": 8,
-      "description": "Selected gear."
-    },
-    "DRS": {
-      "type": "integer",
-      "enum": [0, 1],
-      "description": "DRS state flag."
-    },
-    "Driver": {
-      "type": "string",
-      "description": "Three-letter driver code where available."
-    },
-    "X": {
-      "type": "number",
-      "description": "Optional relative or track coordinate."
-    },
-    "Y": {
-      "type": "number",
-      "description": "Optional relative or track coordinate."
-    }
+    "Distance": {"type": "number", "minimum": 0, "description": "Distance along lap in metres."},
+    "Speed": {"type": "number", "minimum": 0, "maximum": 450, "description": "Vehicle speed in km/h."},
+    "Throttle": {"type": "number", "minimum": 0, "maximum": 100, "description": "Throttle position in percent."},
+    "Brake": {"type": "number", "minimum": 0, "maximum": 100, "description": "Brake position in percent."},
+    "RPM": {"type": "number", "minimum": 0, "maximum": 20000, "description": "Engine speed in rpm."},
+    "Gear": {"type": "integer", "minimum": 0, "maximum": 8, "description": "Selected gear; 0 represents neutral."},
+    "DRS": {"type": "integer", "enum": [0, 1], "description": "Normalized binary DRS state."},
+    "Driver": {"type": "string", "description": "Three-letter driver code where available."},
+    "X": {"type": "number", "description": "Optional relative or track coordinate."},
+    "Y": {"type": "number", "description": "Optional relative or track coordinate."}
   },
   "additionalProperties": true
 }
