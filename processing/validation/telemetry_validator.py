@@ -1,238 +1,95 @@
-"""
-APEX-RACE-AI
-Telemetry Data Quality Validator
+"""Validation layer for the normalized APEX-RACE-AI telemetry contract."""
 
-Purpose:
-    Validate raw motorsport telemetry before it
-    enters the downstream processing pipeline.
-"""
+from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 
 import pandas as pd
 
 
-REQUIRED_COLUMNS = [
-    "Date",
-    "RPM",
-    "Speed",
-    "nGear",
-    "Throttle",
-    "Brake",
-    "DRS",
-    "Source",
-    "Time",
-    "SessionTime",
-    "Distance",
-    "Driver",
-]
+REQUIRED_FIELDS = {
+    "Distance": "non-negative numeric distance",
+    "Speed": "0..450 km/h",
+    "Throttle": "0..100 percentage",
+    "Brake": "0..100 percentage",
+    "RPM": "0..20000 rpm",
+    "Gear": "1..8 gear",
+    "DRS": "binary flag",
+}
 
 
-def validate_schema(df: pd.DataFrame) -> list[str]:
-    """Check whether all required columns are present."""
+def validate_telemetry(df: pd.DataFrame) -> dict[str, Any]:
+    """Validate an in-memory telemetry DataFrame for dashboard use."""
+    fields = {field: field in df.columns for field in REQUIRED_FIELDS}
+    issues: list[str] = []
 
-    errors = []
+    for field, present in fields.items():
+        if not present:
+            issues.append(f"Missing required field: {field}")
 
-    missing_columns = [
-        column
-        for column in REQUIRED_COLUMNS
-        if column not in df.columns
-    ]
-
-    if missing_columns:
-        errors.append(
-            f"Missing columns: {missing_columns}"
-        )
-
-    return errors
-
-
-def validate_nulls(df: pd.DataFrame) -> list[str]:
-    """Check for null values in required columns."""
-
-    errors = []
-
-    for column in REQUIRED_COLUMNS:
-        if column in df.columns:
-            null_count = int(df[column].isna().sum())
-
-            if null_count > 0:
-                errors.append(
-                    f"{column}: {null_count} null values"
-                )
-
-    return errors
-
-
-def validate_duplicates(df: pd.DataFrame) -> list[str]:
-    """Check for duplicate telemetry records."""
-
-    duplicate_count = int(df.duplicated().sum())
-
-    if duplicate_count > 0:
-        return [
-            f"Duplicate rows: {duplicate_count}"
-        ]
-
-    return []
-
-
-def validate_numeric_columns(df: pd.DataFrame) -> list[str]:
-    """Check that telemetry measurements are numeric."""
-
-    errors = []
-
-    numeric_columns = [
-        "RPM",
-        "Speed",
-        "nGear",
-        "Throttle",
-        "Distance",
-    ]
-
-    for column in numeric_columns:
-        if column not in df.columns:
+    for field in REQUIRED_FIELDS:
+        if field not in df.columns:
             continue
+        numeric = pd.to_numeric(df[field], errors="coerce")
+        if numeric.isna().any():
+            issues.append(f"{field} contains non-numeric or null values.")
 
-        if not pd.api.types.is_numeric_dtype(df[column]):
-            errors.append(
-                f"{column}: expected numeric data type"
-            )
+    ranges = {
+        "Distance": (0, None),
+        "Speed": (0, 450),
+        "Throttle": (0, 100),
+        "Brake": (0, 100),
+        "RPM": (0, 20000),
+        "Gear": (1, 8),
+        "DRS": (0, 1),
+    }
 
-    return errors
+    for field, (lower, upper) in ranges.items():
+        if field not in df.columns:
+            continue
+        values = pd.to_numeric(df[field], errors="coerce").dropna()
+        if lower is not None and (values < lower).any():
+            issues.append(f"{field} contains values below {lower}.")
+        if upper is not None and (values > upper).any():
+            issues.append(f"{field} contains values above {upper}.")
 
+    duplicate_distance = int(df["Distance"].duplicated().sum()) if "Distance" in df.columns else 0
 
-def validate_ranges(df: pd.DataFrame) -> list[str]:
-    """Validate physically meaningful telemetry ranges."""
-
-    errors = []
-
-    if "Speed" in df.columns:
-        invalid_speed = (df["Speed"] < 0).sum()
-
-        if invalid_speed:
-            errors.append(
-                f"Speed: {invalid_speed} negative values"
-            )
-
-    if "RPM" in df.columns:
-        invalid_rpm = (df["RPM"] < 0).sum()
-
-        if invalid_rpm:
-            errors.append(
-                f"RPM: {invalid_rpm} negative values"
-            )
-
-    if "nGear" in df.columns:
-        invalid_gear = (
-            (df["nGear"] < 0) |
-            (df["nGear"] > 8)
-        ).sum()
-
-        if invalid_gear:
-            errors.append(
-                f"nGear: {invalid_gear} invalid values"
-            )
-
-    if "Throttle" in df.columns:
-        invalid_throttle = (
-            (df["Throttle"] < 0) |
-            (df["Throttle"] > 100)
-        ).sum()
-
-        if invalid_throttle:
-            errors.append(
-                f"Throttle: {invalid_throttle} values outside 0-100"
-            )
-
-    if "Distance" in df.columns:
-        invalid_distance = (
-            df["Distance"] < 0
-        ).sum()
-
-        if invalid_distance:
-            errors.append(
-                f"Distance: {invalid_distance} negative values"
-            )
-
-    return errors
+    return {
+        "valid": len(issues) == 0,
+        "rows": int(len(df)),
+        "missing_cells": int(df.isna().sum().sum()),
+        "duplicate_distance": duplicate_distance,
+        "fields": fields,
+        "issues": issues,
+    }
 
 
-def validate_driver(df: pd.DataFrame) -> list[str]:
-    """Validate driver identifiers."""
-
-    errors = []
-
-    if "Driver" in df.columns:
-        empty_driver = (
-            df["Driver"]
-            .astype(str)
-            .str.strip()
-            .eq("")
-            .sum()
-        )
-
-        if empty_driver:
-            errors.append(
-                f"Driver: {empty_driver} empty values"
-            )
-
-    return errors
-
-
-def validate_telemetry(file_path: str) -> bool:
-    """
-    Run all telemetry quality checks.
-
-    Returns True when the dataset passes all checks.
-    """
-
+def validate_telemetry_file(file_path: str | Path) -> dict[str, Any]:
+    """Validate a CSV file using the same telemetry contract."""
     path = Path(file_path)
-
     if not path.exists():
-        raise FileNotFoundError(
-            f"Telemetry file not found: {path}"
-        )
+        raise FileNotFoundError(f"Telemetry file not found: {path}")
+    return validate_telemetry(pd.read_csv(path))
 
-    df = pd.read_csv(path)
 
-    errors = []
-
-    errors.extend(validate_schema(df))
-    errors.extend(validate_nulls(df))
-    errors.extend(validate_duplicates(df))
-    errors.extend(validate_numeric_columns(df))
-    errors.extend(validate_ranges(df))
-    errors.extend(validate_driver(df))
-
+def print_quality_report(report: dict[str, Any], file_path: str | Path | None = None) -> None:
+    """Render a compact quality report for CLI usage."""
     print("=" * 60)
     print("APEX-RACE-AI DATA QUALITY REPORT")
     print("=" * 60)
-
-    print(f"File: {path}")
-    print(f"Rows: {len(df)}")
-    print(f"Columns: {len(df.columns)}")
-
-    if errors:
-        print("\nSTATUS: FAILED")
-        print("\nIssues found:")
-
-        for error in errors:
-            print(f"  - {error}")
-
-        return False
-
-    print("\nSTATUS: PASSED")
-    print("All telemetry quality checks passed.")
-
-    return True
+    if file_path:
+        print(f"File: {file_path}")
+    print(f"Rows: {report['rows']}")
+    print(f"Missing cells: {report['missing_cells']}")
+    print(f"Duplicate distance samples: {report['duplicate_distance']}")
+    print(f"Status: {'PASSED' if report['valid'] else 'FAILED'}")
+    for issue in report["issues"]:
+        print(f"  - {issue}")
 
 
 if __name__ == "__main__":
-
-    telemetry_file = (
-        "data/raw/fastf1/2024/"
-        "italian_gp/LEC_fastest_lap.csv"
-    )
-
-    validate_telemetry(telemetry_file)
+    telemetry_file = "data/raw/fastf1/2024/italian_gp/LEC_fastest_lap.csv"
+    result = validate_telemetry_file(telemetry_file)
+    print_quality_report(result, telemetry_file)
