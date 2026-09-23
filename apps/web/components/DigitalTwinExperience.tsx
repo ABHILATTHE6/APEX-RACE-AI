@@ -61,8 +61,9 @@ function TrackScene({ progress }: { progress: number }) {
     const point = curve.getPointAt(progress);
     const ahead = curve.getPointAt((progress + 0.006) % 1);
     carRef.current.position.copy(point);
-    carRef.current.lookAt(ahead.x, point.y, ahead.z);
-    carRef.current.rotateY(Math.PI);
+    const direction = new THREE.Vector3().subVectors(ahead, point).normalize();
+    const heading = Math.atan2(direction.x, direction.z);
+    carRef.current.rotation.set(0, heading + Math.PI, 0);
   }, [curve, progress]);
 
   useFrame((_, delta) => {
