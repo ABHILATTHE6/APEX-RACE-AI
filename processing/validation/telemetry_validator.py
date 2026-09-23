@@ -14,7 +14,7 @@ REQUIRED_FIELDS = {
     "Throttle": "0..100 percentage",
     "Brake": "0..100 percentage",
     "RPM": "0..20000 rpm",
-    "Gear": "1..8 gear",
+    "Gear": "0..8 gear, including neutral",
     "DRS": "binary flag",
 }
 
@@ -41,7 +41,7 @@ def validate_telemetry(df: pd.DataFrame) -> dict[str, Any]:
         "Throttle": (0, 100),
         "Brake": (0, 100),
         "RPM": (0, 20000),
-        "Gear": (1, 8),
+        "Gear": (0, 8),
         "DRS": (0, 1),
     }
 
