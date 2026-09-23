@@ -74,6 +74,19 @@ Live timing, race-control events, strategy simulations, anomaly alerts and predi
 
 ---
 
+## 🌐 Web digital twin layer
+
+The repository now contains two complementary UI layers:
+
+- **Streamlit Pit Wall** for the existing Python telemetry workflow and validation workspace.
+- **Next.js Digital Twin** in [apps/web](apps/web/README.md) for the target browser-native, white-first 3D experience.
+
+The current web foundation demonstrates:
+
+**replay timeline → telemetry state → 3D circuit → 3D car → engineering insight**
+
+The web scene uses a deterministic simulated replay, a procedural prototype car and simplified procedural circuit geometry. These are engineering scaffolds and do not represent proprietary F1 assets or private team telemetry.
+
 ## 🏎️ Core capabilities
 
 ### 1. FastF1 historical ingestion
