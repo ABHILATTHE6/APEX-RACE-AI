@@ -47,3 +47,20 @@ jobs:
           assert validate_telemetry(df)["valid"] is True
           print("APEX-RACE-AI smoke test passed.")
           PY
+
+  web-build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: apps/web/package.json
+      - name: Install web dependencies
+        run: npm install
+      - name: Build web application
+        run: npm run build

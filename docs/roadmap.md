@@ -42,7 +42,28 @@ Next enhancements:
 - [ ] Corner event detection
 - [ ] Driver selector from session metadata
 
-## Phase 3 — Live Race Operations 🔜
+## Phase 3 — Digital Twin & Live Race Operations 🚧
+
+Digital-twin foundation started:
+- [x] Next.js App Router web shell
+- [x] White-first responsive visual system
+- [x] React Three Fiber scene
+- [x] Procedural circuit path
+- [x] Procedural prototype car
+- [x] Telemetry-driven replay cursor
+- [x] Play / pause / seek timeline
+- [x] Explicit simulated-data labeling
+- [x] Web-layer CI build job
+
+Next:
+- [ ] Replace demo state with provider-independent API contracts
+- [ ] Real circuit geometry adapter
+- [ ] Normalized telemetry WebSocket client
+- [ ] Synchronized telemetry charts
+- [ ] Circuit heatmap renderer
+- [ ] Driver/session selectors from backend metadata
+
+### Live operations
 
 ### Data
 - [ ] Live OpenF1 integration
